@@ -61,9 +61,9 @@ jobs:
           MYSQL_PASSWORD: password
         options: >-
           --health-cmd="mysqladmin ping"
-          --health-interval=5s
-          --health-timeout=2s
-          --health-retries=3
+          --health-interval=10s
+          --health-timeout=10s
+          --health-retries=10
       wordpress:
         image: ghcr.io/eugene-manuilov/site-kit/wp-4-9:20201101.0
         credentials:
