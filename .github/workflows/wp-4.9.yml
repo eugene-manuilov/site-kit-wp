@@ -39,63 +39,66 @@ jobs:
             ghcr.io/eugene-manuilov/site-kit/wp-4-9:20201101.0
           build-args: |
             WP_IMAGE=wordpress:4.9
-  # e2e:
-  #   name: Run E2E Tests
-  #   runs-on: ubuntu-latest
-  #   services:
-  #     mysql:
-  #       image: mysql:5.7
-  #       ports:
-  #         - 3306
-  #       env:
-  #         MYSQL_ROOT_PASSWORD: example
-  #         MYSQL_DATABASE: wordpress_test
-  #       options: >-
-  #         --health-cmd="mysqladmin ping"
-  #         --health-interval=5s
-  #         --health-timeout=2s
-  #         --health-retries=3
-  #     wordpress:
-  #       image: ghcr.io/eugene-manuilov/site-kit/wp-4-9:20201101.0
-  #       ports:
-  #         - 9002:80
-  #       volumes:
-  #         - wordpress_data:/var/www/html
-  #       env:
-  #         WORDPRESS_CONFIG_EXTRA: |
-  #           define( 'SCRIPT_DEBUG', true );
-  #       options: >-
-  #         --mount type=bind,source=/home/runner/work/site-kit-wp/site-kit-wp,target=/var/www/html/wp-content/plugins/google-site-kit,readonly
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #     # - name: Get Composer Cache Directory
-  #     #   id: composer-cache
-  #     #   run: echo "::set-output name=dir::$(composer config cache-files-dir)"
-  #     # - uses: actions/cache@v2
-  #     #   with:
-  #     #     path: ${{ steps.composer-cache.outputs.dir }}
-  #     #     key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-  #     # - name: Composer Install
-  #     #   run: composer install --no-dev --no-interaction --no-progress
-  #     - name: Configure WordPress
-  #       run: |
-  #         docker pull wordpress:cli
-  #         docker exec ${{ job.services.wordpress.id }} wp db import wp-content/plugins/google-site-kit/bin/local-env/dump.sql
-  #     # - name: Read .nvmrc
-  #     #   run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
-  #     #   id: nvm
-  #     # - name: Setup Node.js (.nvmrc)
-  #     #   uses: actions/setup-node@v1
-  #     #   with:
-  #     #     node-version: "${{ steps.nvm.outputs.NVMRC }}"
-  #     # - name: Cache Node - npm
-  #     #   uses: actions/cache@v1
-  #     #   with:
-  #     #     path: ~/.npm
-  #     #     key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-  #     #     restore-keys: |
-  #     #       ${{ runner.os }}-node-cache-
-  #     # - name: npm install
-  #     #   run: npm ci
-  #     # - name: Run Tests
-  #     #   run: npm run test:e2e
+  e2e:
+    name: Run E2E Tests
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:5.7
+        ports:
+          - 3306
+        env:
+          MYSQL_ROOT_PASSWORD: example
+          MYSQL_DATABASE: wordpress_test
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=5s
+          --health-timeout=2s
+          --health-retries=3
+      wordpress:
+        image: ghcr.io/eugene-manuilov/site-kit/wp-4-9:20201101.0
+        ports:
+          - 9002:80
+        volumes:
+          - wordpress_data:/var/www/html
+        env:
+          WORDPRESS_CONFIG_EXTRA: |
+            define( 'SCRIPT_DEBUG', true );
+        options: >-
+          --mount type=bind,source=/home/runner/work/site-kit-wp/site-kit-wp,target=/var/www/html/wp-content/plugins/google-site-kit,readonly
+    steps:
+      - uses: actions/checkout@v2
+      # - name: Get Composer Cache Directory
+      #   id: composer-cache
+      #   run: echo "::set-output name=dir::$(composer config cache-files-dir)"
+      # - uses: actions/cache@v2
+      #   with:
+      #     path: ${{ steps.composer-cache.outputs.dir }}
+      #     key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+      # - name: Composer Install
+      #   run: composer install --no-dev --no-interaction --no-progress
+      - name: Configure WordPress
+        run: |
+          docker exec ${{ job.services.wordpress.id }} wp db import wp-content/plugins/google-site-kit/bin/local-env/dump.sql
+          docker exec ${{ job.services.wordpress.id }} wp plugin install gutenberg --version=4.9.0 --activate
+          docker exec ${{ job.services.wordpress.id }} wp plugin install amp --version="2.0.0"
+          docker exec ${{ job.services.wordpress.id }} wp plugin update amp --minor
+          docker exec ${{ job.services.wordpress.id }} wp post list
+      # - name: Read .nvmrc
+      #   run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
+      #   id: nvm
+      # - name: Setup Node.js (.nvmrc)
+      #   uses: actions/setup-node@v1
+      #   with:
+      #     node-version: "${{ steps.nvm.outputs.NVMRC }}"
+      # - name: Cache Node - npm
+      #   uses: actions/cache@v1
+      #   with:
+      #     path: ~/.npm
+      #     key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-node-cache-
+      # - name: npm install
+      #   run: npm ci
+      # - name: Run Tests
+      #   run: npm run test:e2e
