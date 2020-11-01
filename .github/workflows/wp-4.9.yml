@@ -83,11 +83,11 @@ jobs:
       #   run: composer install --no-dev --no-interaction --no-progress
       - name: Configure WordPress
         run: |
-          docker exec ${{ job.services.wordpress.id }} wp db import wp-content/plugins/google-site-kit/bin/local-env/dump.sql
-          docker exec ${{ job.services.wordpress.id }} wp plugin install gutenberg --version=4.9.0 --activate
-          docker exec ${{ job.services.wordpress.id }} wp plugin install amp --version="2.0.0"
-          docker exec ${{ job.services.wordpress.id }} wp plugin update amp --minor
-          docker exec ${{ job.services.wordpress.id }} wp post list
+          docker exec ${{ job.services.wordpress.id }} wp db import wp-content/plugins/google-site-kit/bin/local-env/dump.sql --allow-root
+          docker exec ${{ job.services.wordpress.id }} wp plugin install gutenberg --version=4.9.0 --activate --allow-root
+          docker exec ${{ job.services.wordpress.id }} wp plugin install amp --version="2.0.0" --allow-root
+          docker exec ${{ job.services.wordpress.id }} wp plugin update amp --minor --allow-root
+          docker exec ${{ job.services.wordpress.id }} wp post list --allow-root
       # - name: Read .nvmrc
       #   run: echo "##[set-output name=NVMRC;]$(cat .nvmrc)"
       #   id: nvm
