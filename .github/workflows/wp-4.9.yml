@@ -27,18 +27,18 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.CR_PAT }}
-      # - uses: docker/build-push-action@v2
-      #   if: steps.cache.outputs.cache-hit != 'true'
-      #   with:
-      #     cache-from: type=local,src=/tmp/.buildx-cache
-      #     cache-to: type=local,dest=/tmp/.buildx-cache
-      #     push: true
-      #     context: .
-      #     file: ./bin/local-env/docker/wordpress/Dockerfile
-      #     tags: |
-      #       ghcr.io/eugene-manuilov/site-kit/wp-4-9:20201101.0
-      #     build-args: |
-      #       WP_IMAGE=wordpress:4.9
+      - uses: docker/build-push-action@v2
+        if: steps.cache.outputs.cache-hit != 'true'
+        with:
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+          push: true
+          context: .
+          file: ./bin/local-env/docker/wordpress/Dockerfile
+          tags: |
+            ghcr.io/eugene-manuilov/site-kit/wp-4-9:20201101.0
+          build-args: |
+            WP_IMAGE=wordpress:4.9
 
   # e2e:
   #   name: Run E2E Tests
