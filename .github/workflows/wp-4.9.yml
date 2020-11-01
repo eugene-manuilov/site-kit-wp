@@ -75,15 +75,15 @@ jobs:
           --mount type=bind,source=/home/runner/work/site-kit-wp/site-kit-wp,target=/var/www/html/wp-content/plugins/google-site-kit,readonly
     steps:
       - uses: actions/checkout@v2
-      # - name: Get Composer Cache Directory
-      #   id: composer-cache
-      #   run: echo "::set-output name=dir::$(composer config cache-files-dir)"
-      # - uses: actions/cache@v2
-      #   with:
-      #     path: ${{ steps.composer-cache.outputs.dir }}
-      #     key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-      # - name: Composer Install
-      #   run: composer install --no-dev --no-interaction --no-progress
+      - name: Get Composer Cache Directory
+        id: composer-cache
+        run: echo "::set-output name=dir::$(composer config cache-files-dir)"
+      - uses: actions/cache@v2
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+      - name: Composer Install
+        run: composer install --no-dev --no-interaction --no-progress
       - name: Configure WordPress
         run: |
           docker exec ${{ job.services.wordpress.id }} wp db import wp-content/plugins/google-site-kit/bin/local-env/dump.sql --allow-root
