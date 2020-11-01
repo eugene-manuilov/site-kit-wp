@@ -17,6 +17,11 @@ jobs:
         with:
           path: /tmp/.buildx-cache
           key: ${{ runner.os }}-buildx-${{ hashFiles('tests/e2e/**/*.php', 'bin/local-env/docker/wordpress/Dockerfile') }}
+      - uses: crazy-max/ghaction-docker-meta@v1
+        id: metadata
+        if: steps.cache.outputs.cache-hit != 'true'
+        with:
+          images: site-kit/wp-4-9
       - uses: docker/setup-qemu-action@v1
         if: steps.cache.outputs.cache-hit != 'true'
       - uses: docker/setup-buildx-action@v1
@@ -35,6 +40,7 @@ jobs:
           push: true
           context: .
           file: ./bin/local-env/docker/wordpress/Dockerfile
+          labels: ${{ steps.metadata.outputs.labels }}
           tags: |
             ghcr.io/eugene-manuilov/site-kit/wp-4-9:20201101.0
           build-args: |
