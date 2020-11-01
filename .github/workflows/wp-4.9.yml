@@ -33,7 +33,7 @@ jobs:
           context: .
           file: ./bin/local-env/docker/wordpress/Dockerfile
           tags: |
-            eugene-manuilov-site-kit/wp-4-9:20201101.0
+            ghcr.io/eugene-manuilov-site-kit/wp-4-9:20201101.0
           build-args: |
             WP_IMAGE=wordpress:4.9
 
