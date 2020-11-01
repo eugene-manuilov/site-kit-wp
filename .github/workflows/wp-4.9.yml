@@ -19,9 +19,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-buildx-
       - name: Show files
-        run: ls -l .
+        run: ls -la .
       - name: Show files 2
-        run: ls -l .buildx-cache
+        run: ls -la .buildx-cache
       - uses: docker/setup-qemu-action@v1
         if: hashFiles('.buildx-cache/docker-build-not-needed') == ''
       - uses: docker/setup-buildx-action@v1
