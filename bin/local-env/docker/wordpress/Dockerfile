@@ -13,5 +13,4 @@ COPY ./tests/e2e/plugins /var/www/html/wp-content/plugins
 RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar \
     && chmod +x wp-cli.phar \
     && mv wp-cli.phar /usr/local/bin/wp \
-    && wp --info \
-    && wp plugin install amp --force --quiet --version="2.0.0" --allow-root --path=/var/www/html/
+    && wp --info
