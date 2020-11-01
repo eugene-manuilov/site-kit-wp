@@ -69,11 +69,6 @@ jobs:
           password: ${{ secrets.CR_PAT }}
         ports:
           - 9002:80
-        volumes:
-          - wordpress_data:/var/www/html
-        env:
-          WORDPRESS_CONFIG_EXTRA: |
-            define( 'SCRIPT_DEBUG', true );
         options: >-
           --mount type=bind,source=/home/runner/work/site-kit-wp/site-kit-wp,target=/var/www/html/wp-content/plugins/google-site-kit,readonly
     steps:
