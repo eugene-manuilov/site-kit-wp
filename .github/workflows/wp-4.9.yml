@@ -11,13 +11,12 @@ jobs:
     name: Build WP Image
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
       - uses: actions/cache@v2
         id: cache
         with:
           path: /tmp/.buildx-cache
           key: ${{ runner.os }}-buildx-${{ hashFiles('tests/e2e/**/*.php', 'bin/local-env/docker/wordpress/Dockerfile') }}
-      - uses: actions/checkout@v2
-        if: steps.cache.outputs.cache-hit != 'true'
       - uses: crazy-max/ghaction-docker-meta@v1
         id: metadata
         if: steps.cache.outputs.cache-hit != 'true'
@@ -76,14 +75,15 @@ jobs:
           --mount type=bind,source=/home/runner/work/site-kit-wp/site-kit-wp,target=/var/www/html/wp-content/plugins/google-site-kit,readonly
     steps:
       - uses: actions/checkout@v2
-      - name: Get Composer Cache Directory
-        id: metadata
+      - name: Get Info
+        id: info
         run: |
           echo "::set-output name=composerCacheFilesDir::$(composer config cache-files-dir)"
           echo "::set-output name=nvmrc::$(cat .nvmrc)"
-      - uses: actions/cache@v2
+      - name: Load Composer Cache
+        uses: actions/cache@v2
         with:
-          path: ${{ steps.metadata.outputs.composerCacheFilesDir }}
+          path: ${{ steps.info.outputs.composerCacheFilesDir }}
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
       - name: Composer Install
         run: composer install --no-dev --no-interaction --no-progress
@@ -97,13 +97,13 @@ jobs:
       - name: Setup Node.js (.nvmrc)
         uses: actions/setup-node@v1
         with:
-          node-version: "${{ steps.metadata.outputs.nvmrc }}"
-      - name: Cache Node - npm
+          node-version: "${{ steps.info.outputs.nvmrc }}"
+      - name: Load NPM Cache
         uses: actions/cache@v2
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-      - name: npm install
+      - name: Install NPM Dependencies
         run: npm ci
       - name: Run Tests
         run: npm run test:e2e
