@@ -16,7 +16,7 @@ jobs:
         id: cache
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ hashFiles('tests/e2e/**/*.php') }}
+          key: ${{ runner.os }}-buildx-${{ hashFiles('tests/e2e/**/*.php', 'bin/local-env/docker/wordpress/Dockerfile') }}
       - uses: docker/setup-qemu-action@v1
         if: steps.cache.outputs.cache-hit != 'true'
       - uses: docker/setup-buildx-action@v1
