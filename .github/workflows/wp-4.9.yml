@@ -23,10 +23,11 @@ jobs:
         with:
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
+          push: true
           context: .
           file: ./bin/local-env/docker/wordpress/Dockerfile
           tags: |
-            eugene-site-kit/wp-4-9:20201101.0
+            eugene-manuilov/site-kit/wp-4-9:20201101.0
           build-args: |
             WP_IMAGE=wordpress:4.9
 
