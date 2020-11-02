@@ -95,18 +95,16 @@ jobs:
           docker exec --user 33:33 ${{ job.services.wordpress.id }} wp plugin install gutenberg --version="4.9.0" --activate
           docker exec --user 33:33 ${{ job.services.wordpress.id }} wp plugin install amp --version="2.0.0"
           docker exec --user 33:33 ${{ job.services.wordpress.id }} wp plugin update amp --minor
-      # - name: Setup Node.js (.nvmrc)
-      #   uses: actions/setup-node@v1
-      #   with:
-      #     node-version: "${{ steps.info.outputs.nvmrc }}"
-      # - name: Load NPM Cache
-      #   uses: actions/cache@v2
-      #   with:
-      #     path: ~/.npm
-      #     key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-      # - name: Install NPM Dependencies
-      #   run: npm ci
-      # - name: Run Tests
-      #   run: npm run test:e2e
-      - name: Test
-        run: curl http://localhost:9002/wp-admin/ -vvv
+      - name: Setup Node.js (.nvmrc)
+        uses: actions/setup-node@v1
+        with:
+          node-version: "${{ steps.info.outputs.nvmrc }}"
+      - name: Load NPM Cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+      - name: Install NPM Dependencies
+        run: npm ci
+      - name: Run Tests
+        run: npm run test:e2e -- tests/e2e/specs/modules/analytics/dashboard-date-range.test.js
