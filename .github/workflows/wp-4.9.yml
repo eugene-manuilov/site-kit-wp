@@ -95,6 +95,8 @@ jobs:
           docker exec --user 33:33 ${{ job.services.wordpress.id }} wp plugin install gutenberg --version="4.9.0" --activate
           docker exec --user 33:33 ${{ job.services.wordpress.id }} wp plugin install amp --version="2.0.0"
           docker exec --user 33:33 ${{ job.services.wordpress.id }} wp plugin update amp --minor
+          docker exec --user 33:33 ${{ job.services.wordpress.id }} ls -l /github
+          docker exec --user 33:33 ${{ job.services.wordpress.id }} ls -l /github/workspace
       - name: Setup Node.js (.nvmrc)
         uses: actions/setup-node@v1
         with:
