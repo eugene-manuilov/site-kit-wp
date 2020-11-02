@@ -106,5 +106,7 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
       - name: Install NPM Dependencies
         run: npm ci
+      - name: Build Assets
+        run: npm run build:dev
       - name: Run Tests
         run: npm run test:e2e -- tests/e2e/specs/modules/analytics/dashboard-date-range.test.js
