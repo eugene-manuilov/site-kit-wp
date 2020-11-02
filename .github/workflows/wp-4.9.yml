@@ -108,4 +108,4 @@ jobs:
       # - name: Run Tests
       #   run: npm run test:e2e
       - name: Test
-        run: curl http://localhost:9002/
+        run: curl http://localhost:9002/ -vvv
