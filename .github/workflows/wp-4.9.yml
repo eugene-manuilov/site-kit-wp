@@ -99,13 +99,7 @@ jobs:
           image-username: ${{ github.repository_owner }}
           image-password: ${{ secrets.CR_PAT }}
           image-network: ${{ job.services.mysql.network }}
-          container:
-            image: ghcr.io/eugene-manuilov/site-kit/wp-4-9
-            tag:  ${{ hashFiles('tests/e2e/**/*.php', 'bin/local-env/docker/wordpress/Dockerfile') }}
-            username: ${{ github.repository_owner }}
-            password: ${{ secrets.CR_PAT }}
-            network: ${{ job.services.mysql.network }}
-        # - name: Load Composer Cache
+      # - name: Load Composer Cache
       #   uses: actions/cache@v2
       #   with:
       #     path: ${{ steps.info.outputs.composerCacheFilesDir }}

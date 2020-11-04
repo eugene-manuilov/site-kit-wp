@@ -1,33 +1,32 @@
 const core = require( '@actions/core' );
 const Docker = require( 'dockerode' );
 
-try {
+async function run() {
 	const username = core.getInput( 'image-username' );
 	const password = core.getInput( 'image-password' );
 
-	console.log( core.getInput( 'container' ) );
+	const docker = new Docker();
+	const container = await docker.createContainer( {
+		name: 'wordpress',
+		AttachStdout: true,
+		AttachStderr: true,
+		Image: core.getInput( 'image', { required: true } ) + ':' + core.getInput( 'image-tag', { required: true } ),
+		HostConfig: {
+			NetworkMode: core.getInput( 'image-network', { required: true } ),
+			PortBindings: {
+				'9002/tcp': [ { HostPort: '80' } ],
+			},
+		},
+	} );
 
-	// const docker = new Docker();
+	core.startGroup( 'Starting WordPress container' );
+	container.start();
+	core.endGroup();
 
-	// core.startGroup( 'Start WordPress container' );
-
-	// docker.createContainer( {
-	// 	name: 'wordpress',
-	// 	Image: core.getInput( 'image', { required: true } ) + ':' + core.getInput( 'image-tag', { required: true } ),
-	// 	HostConfig: {
-	// 		NetworkMode: core.getInput( 'image-network', { required: true } ),
-	// 		PortBindings: {
-	// 			'9002/tcp': [ { HostPort: '80' } ],
-	// 		},
-	// 	},
-	// } );
-
-	// core.endGroup();
-
-	const container_id = '12345';
-
-	core.saveState( 'container_id', container_id );
-	core.setOutput( 'container_id', container_id );
-} catch ( e ) {
-	core.setFailed( e.message );
+	core.saveState( 'container_id', container.id );
+	core.setOutput( 'id', container.id );
 }
+
+run().catch( ( e ) => {
+	core.setFailed( e.message );
+} );
