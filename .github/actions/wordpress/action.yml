@@ -1,0 +1,24 @@
+name: WordPress
+description: Run WordPress container
+inputs:
+  image:
+    description: Wordpress image to use
+    required: true
+    default: wordpress
+  image-tag:
+    description: WordPress image tag to use
+    required: true
+    default: latest
+  image-username:
+    description: Username to log into a private container registry
+    required: false
+  image-password:
+    description: Password to log into a private container registry
+    required: false
+outputs:
+  container_id:
+    description: WordPress container id
+runs:
+  using: node12
+  main: up.js
+  post: down.js

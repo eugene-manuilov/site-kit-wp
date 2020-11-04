@@ -43,7 +43,7 @@ jobs:
           file: ./bin/local-env/docker/wordpress/Dockerfile
           labels: ${{ steps.metadata.outputs.labels }}
           tags: |
-            ghcr.io/eugene-manuilov/site-kit/wp-4-9:20201101.0
+            ghcr.io/eugene-manuilov/site-kit/wp-4-9:${{ hashFiles('tests/e2e/**/*.php', 'bin/local-env/docker/wordpress/Dockerfile') }}
           build-args: |
             WP_IMAGE=wordpress:4.9
   e2e:
@@ -65,48 +65,54 @@ jobs:
           --health-interval=10s
           --health-timeout=10s
           --health-retries=10
-      wordpress:
-        image: ghcr.io/eugene-manuilov/site-kit/wp-4-9:20201101.0
-        credentials:
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.CR_PAT }}
-        ports:
-          - 9002:80
-        options: >-
-          --mount type=bind,source=/home/runner/work/site-kit-wp/site-kit-wp,target=/var/www/html/wp-content/plugins/google-site-kit,readonly
+      # wordpress:
+      #   image: ghcr.io/eugene-manuilov/site-kit/wp-4-9:20201101.0
+      #   credentials:
+      #     username: ${{ github.repository_owner }}
+      #     password: ${{ secrets.CR_PAT }}
+      #   ports:
+      #     - 9002:80
+      #   options: >-
+      #     --mount type=bind,source=/home/runner/work/site-kit-wp/site-kit-wp,target=/var/www/html/wp-content/plugins/google-site-kit,readonly
     steps:
       - uses: actions/checkout@v2
-      - name: Get Info
-        id: info
-        run: |
-          echo "::set-output name=composerCacheFilesDir::$(composer config cache-files-dir)"
-          echo "::set-output name=nvmrc::$(cat .nvmrc)"
-      - name: Load Composer Cache
-        uses: actions/cache@v2
+      - uses: .github/actions/wordpress/
         with:
-          path: ${{ steps.info.outputs.composerCacheFilesDir }}
-          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-      - name: Composer Install
-        run: composer install --no-dev --no-interaction --no-progress
-      - name: Configure WordPress
-        run: |
-          docker exec --user 33:33 ${{ job.services.wordpress.id }} wp db import wp-content/plugins/google-site-kit/bin/local-env/dump.sql
-          docker exec --user 33:33 ${{ job.services.wordpress.id }} wp core update-db
-          docker exec --user 33:33 ${{ job.services.wordpress.id }} wp plugin install gutenberg --version="4.9.0" --activate
-          docker exec --user 33:33 ${{ job.services.wordpress.id }} wp plugin install amp --version="2.0.0"
-          docker exec --user 33:33 ${{ job.services.wordpress.id }} wp plugin update amp --minor
-      - name: Setup Node.js (.nvmrc)
-        uses: actions/setup-node@v1
-        with:
-          node-version: "${{ steps.info.outputs.nvmrc }}"
-      - name: Load NPM Cache
-        uses: actions/cache@v2
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-      - name: Install NPM Dependencies
-        run: npm ci
-      - name: Build Assets
-        run: npm run build:dev
-      - name: Run Tests
-        run: npm run test:e2e -- tests/e2e/specs/modules/analytics/dashboard-date-range.test.js
+          image: ghcr.io/eugene-manuilov/site-kit/wp-4-9
+          image-tag: ${{ hashFiles('tests/e2e/**/*.php', 'bin/local-env/docker/wordpress/Dockerfile') }}
+          image-username: ${{ github.repository_owner }}
+          image-password: ${{ secrets.CR_PAT }}
+      # - name: Get Info
+      #   id: info
+      #   run: |
+      #     echo "::set-output name=composerCacheFilesDir::$(composer config cache-files-dir)"
+      #     echo "::set-output name=nvmrc::$(cat .nvmrc)"
+      # - name: Load Composer Cache
+      #   uses: actions/cache@v2
+      #   with:
+      #     path: ${{ steps.info.outputs.composerCacheFilesDir }}
+      #     key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+      # - name: Composer Install
+      #   run: composer install --no-dev --no-interaction --no-progress
+      # - name: Configure WordPress
+      #   run: |
+      #     docker exec --user 33:33 ${{ job.services.wordpress.id }} wp db import wp-content/plugins/google-site-kit/bin/local-env/dump.sql
+      #     docker exec --user 33:33 ${{ job.services.wordpress.id }} wp core update-db
+      #     docker exec --user 33:33 ${{ job.services.wordpress.id }} wp plugin install gutenberg --version="4.9.0" --activate
+      #     docker exec --user 33:33 ${{ job.services.wordpress.id }} wp plugin install amp --version="2.0.0"
+      #     docker exec --user 33:33 ${{ job.services.wordpress.id }} wp plugin update amp --minor
+      # - name: Setup Node.js (.nvmrc)
+      #   uses: actions/setup-node@v1
+      #   with:
+      #     node-version: "${{ steps.info.outputs.nvmrc }}"
+      # - name: Load NPM Cache
+      #   uses: actions/cache@v2
+      #   with:
+      #     path: ~/.npm
+      #     key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+      # - name: Install NPM Dependencies
+      #   run: npm ci
+      # - name: Build Assets
+      #   run: npm run build:dev
+      # - name: Run Tests
+      #   run: npm run test:e2e -- tests/e2e/specs/modules/analytics/dashboard-date-range.test.js
