@@ -16,5 +16,4 @@ RUN apt-get update && apt-get install -y mysql-client \
     && curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar \
     && chmod +x wp-cli.phar && mv wp-cli.phar /usr/local/bin/wp \
     && mkdir -p /var/www/.wp-cli/cache/ && chmod 0777 /var/www/.wp-cli/cache/ \
-    && chmod -R 0777 /var/www/html/ \
-    && wp --info
+    && chmod -R 0777 /var/www/html/

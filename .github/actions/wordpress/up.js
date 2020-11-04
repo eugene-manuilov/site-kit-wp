@@ -4,9 +4,6 @@ const Docker = require( 'dockerode' );
 async function run() {
 	const docker = new Docker();
 
-	console.log( core.getInput( 'dump' ) );
-	console.log( JSON.stringify( core.getInput( 'wp-cli' ) ) );
-
 	let authconfig = undefined;
 	const username = core.getInput( 'username' );
 	const password = core.getInput( 'password' );
@@ -41,6 +38,9 @@ async function run() {
 
 	core.saveState( 'container_id', container.id );
 	core.setOutput( 'id', container.id );
+
+	// const dump = core.getInput( 'dump' );
+	// const wpCli = core.getInput( 'wp-cli' );
 }
 
 run().catch( ( e ) => {
