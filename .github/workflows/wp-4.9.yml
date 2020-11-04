@@ -76,15 +76,18 @@ jobs:
       #     --mount type=bind,source=/home/runner/work/site-kit-wp/site-kit-wp,target=/var/www/html/wp-content/plugins/google-site-kit,readonly
     steps:
       - uses: actions/checkout@v2
-      - name: Get Info
-        id: info
-        run: |
-          echo "::set-output name=composerCacheFilesDir::$(composer config cache-files-dir)"
-          echo "::set-output name=nvmrc::$(cat .nvmrc)"
-      - name: Setup Node.js (.nvmrc)
-        uses: actions/setup-node@v1
-        with:
-          node-version: "${{ steps.info.outputs.nvmrc }}"
+      # - name: Get Info
+      #   id: info
+      #   run: |
+      #     echo "::set-output name=composerCacheFilesDir::$(composer config cache-files-dir)"
+      #     echo "::set-output name=nvmrc::$(cat .nvmrc)"
+      # - name: Setup Node.js (.nvmrc)
+      #   uses: actions/setup-node@v1
+      #   with:
+      #     node-version: "${{ steps.info.outputs.nvmrc }}"
+      - name: try out nvm
+        shell: bash -l {0}
+        run: nvm install
       - name: Load NPM Cache
         uses: actions/cache@v2
         with:
