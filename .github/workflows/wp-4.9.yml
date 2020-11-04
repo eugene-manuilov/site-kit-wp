@@ -76,7 +76,7 @@ jobs:
       #     --mount type=bind,source=/home/runner/work/site-kit-wp/site-kit-wp,target=/var/www/html/wp-content/plugins/google-site-kit,readonly
     steps:
       - uses: actions/checkout@v2
-      - uses: .github/actions/wordpress/
+      - uses: ./.github/actions/wordpress/
         with:
           image: ghcr.io/eugene-manuilov/site-kit/wp-4-9
           image-tag: ${{ hashFiles('tests/e2e/**/*.php', 'bin/local-env/docker/wordpress/Dockerfile') }}
