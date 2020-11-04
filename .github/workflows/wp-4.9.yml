@@ -94,11 +94,17 @@ jobs:
       - name: Run WordPress Container
         uses: ./.github/actions/wordpress/
         with:
-          image: ghcr.io/eugene-manuilov/site-kit/wp-4-9
-          image-tag: ${{ hashFiles('tests/e2e/**/*.php', 'bin/local-env/docker/wordpress/Dockerfile') }}
-          image-username: ${{ github.repository_owner }}
-          image-password: ${{ secrets.CR_PAT }}
-          image-network: ${{ job.services.mysql.network }}
+          image: ghcr.io/eugene-manuilov/site-kit/wp-4-9:${{ hashFiles('tests/e2e/**/*.php', 'bin/local-env/docker/wordpress/Dockerfile') }}
+          network: ${{ job.services.mysql.network }}
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.CR_PAT }}
+          dump: wp-content/plugins/google-site-kit/bin/local-env/dump.sql
+          wp-cli: |
+            wp core update-db
+            wp plugin install gutenberg --version="4.9.0" --activate
+            wp plugin install amp --version="2.0.0"
+            wp plugin update amp --minor
       # - name: Load Composer Cache
       #   uses: actions/cache@v2
       #   with:

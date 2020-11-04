@@ -2,25 +2,41 @@ const core = require( '@actions/core' );
 const Docker = require( 'dockerode' );
 
 async function run() {
-	const username = core.getInput( 'image-username' );
-	const password = core.getInput( 'image-password' );
-
 	const docker = new Docker();
+
+	console.log( core.getInput( 'dump' ) );
+	console.log( JSON.stringify( core.getInput( 'wp-cli' ) ) );
+
+	let authconfig = undefined;
+	const username = core.getInput( 'username' );
+	const password = core.getInput( 'password' );
+	const serveraddress = core.getInput( 'registry' );
+	if ( username && password && serveraddress ) {
+		authconfig = {
+			username,
+			password,
+			serveraddress,
+		};
+	}
+
+	core.startGroup( 'Creating WordPress container' );
 	const container = await docker.createContainer( {
 		name: 'wordpress',
+		authconfig,
 		AttachStdout: true,
 		AttachStderr: true,
-		Image: core.getInput( 'image', { required: true } ) + ':' + core.getInput( 'image-tag', { required: true } ),
+		Image: core.getInput( 'image', { required: true } ),
 		HostConfig: {
-			NetworkMode: core.getInput( 'image-network', { required: true } ),
+			NetworkMode: core.getInput( 'network', { required: true } ),
 			PortBindings: {
 				'9002/tcp': [ { HostPort: '80' } ],
 			},
 		},
 	} );
+	core.endGroup();
 
 	core.startGroup( 'Starting WordPress container' );
-	container.start();
+	await container.start();
 	core.endGroup();
 
 	core.saveState( 'container_id', container.id );
