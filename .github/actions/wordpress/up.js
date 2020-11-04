@@ -1,14 +1,23 @@
 const core = require( '@actions/core' );
+const Docker = require( 'dockerode' );
 
 try {
-	const image = core.getInput( 'image' );
-	const imageTag = core.getInput( 'image-tag' );
 	const username = core.getInput( 'image-username' );
 	const password = core.getInput( 'image-password' );
 
-	console.log( __dirname );
-	console.log( image + ':' + imageTag );
-	console.log( username );
+	// const docker = new Docker();
+
+	// core.startGroup( 'Start WordPress container' );
+	// docker.createContainer( {
+	// 	name: 'wordpress',
+	// 	Image: core.getInput( 'image', { required: true } ) + ':' + core.getInput( 'image-tag', { required: true } ),
+	// 	ExposedPorts: {
+	// 		9002: {
+
+	// 		}
+	// 	}
+	// } );
+	// core.endGroup();
 
 	const container_id = '12345';
 

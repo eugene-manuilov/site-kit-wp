@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "@actions/core": "^1.2.6"
+    "@actions/core": "^1.2.6",
+    "dockerode": "^3.2.1"
   }
 }
