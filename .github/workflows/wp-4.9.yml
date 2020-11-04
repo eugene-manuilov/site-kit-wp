@@ -79,6 +79,7 @@ jobs:
       - name: Dump mysql context
         env:
           GITHUB_CONTEXT: ${{ toJson(job.services.mysql) }}
+        run: echo "$GITHUB_CONTEXT"
       # - name: Get Info
       #   id: info
       #   run: |
