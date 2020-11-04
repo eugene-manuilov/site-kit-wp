@@ -76,10 +76,6 @@ jobs:
       #     --mount type=bind,source=/home/runner/work/site-kit-wp/site-kit-wp,target=/var/www/html/wp-content/plugins/google-site-kit,readonly
     steps:
       - uses: actions/checkout@v2
-      - name: Dump mysql context
-        env:
-          GITHUB_CONTEXT: ${{ toJson(job.services.mysql) }}
-        run: echo "$GITHUB_CONTEXT"
       # - name: Get Info
       #   id: info
       #   run: |
@@ -102,7 +98,14 @@ jobs:
           image-tag: ${{ hashFiles('tests/e2e/**/*.php', 'bin/local-env/docker/wordpress/Dockerfile') }}
           image-username: ${{ github.repository_owner }}
           image-password: ${{ secrets.CR_PAT }}
-      # - name: Load Composer Cache
+          image-network: ${{ job.services.mysql.network }}
+          container:
+            image: ghcr.io/eugene-manuilov/site-kit/wp-4-9
+            tag:  ${{ hashFiles('tests/e2e/**/*.php', 'bin/local-env/docker/wordpress/Dockerfile') }}
+            username: ${{ github.repository_owner }}
+            password: ${{ secrets.CR_PAT }}
+            network: ${{ job.services.mysql.network }}
+        # - name: Load Composer Cache
       #   uses: actions/cache@v2
       #   with:
       #     path: ${{ steps.info.outputs.composerCacheFilesDir }}

@@ -15,6 +15,12 @@ inputs:
   image-password:
     description: Password to log into a private container registry
     required: false
+    image-network:
+    description: Network where MySQL is running
+    required: true
+  container:
+    description: WordPress container settings
+    required: true
 outputs:
   container_id:
     description: WordPress container id
