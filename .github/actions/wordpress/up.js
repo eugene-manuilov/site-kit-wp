@@ -3,6 +3,7 @@ const Docker = require( 'dockerode' );
 
 async function run() {
 	const docker = new Docker();
+	const Image = core.getInput( 'image', { required: true } );
 
 	let authconfig = undefined;
 	const username = core.getInput( 'username' );
@@ -17,18 +18,15 @@ async function run() {
 	}
 
 	core.startGroup( 'Pulling WordPress image' );
-	await docker.createImage( {
-		authconfig,
-		fromImage: core.getInput( 'image', { required: true } ),
-	} );
+	await docker.pull( Image, { authconfig } );
 	core.endGroup();
 
 	core.startGroup( 'Creating WordPress container' );
 	const container = await docker.createContainer( {
+		Image,
 		name: 'wordpress',
 		AttachStdout: true,
 		AttachStderr: true,
-		Image: core.getInput( 'image', { required: true } ),
 		HostConfig: {
 			NetworkMode: core.getInput( 'network', { required: true } ),
 			PortBindings: {
