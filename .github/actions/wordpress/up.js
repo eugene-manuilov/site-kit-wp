@@ -30,7 +30,7 @@ async function run() {
 	} );
 	core.endGroup();
 
-	core.startGroup( 'Creating WordPress container...' );
+	core.startGroup( 'Creating WordPress container' );
 	const container = await docker.createContainer( {
 		Image,
 		name: 'wordpress',
@@ -44,9 +44,7 @@ async function run() {
 			},
 		},
 	} );
-	core.endGroup();
 
-	core.startGroup( 'Starting WordPress container...' );
 	await container.start();
 	core.endGroup();
 
@@ -55,7 +53,7 @@ async function run() {
 
 	const dump = core.getInput( 'dump' );
 	if ( dump ) {
-		core.startGroup( 'Importing database dump...' );
+		core.startGroup( 'Importing database dump' );
 		await container.exec( {
 			Cmd: [ 'wp', 'db', 'import', dump ],
 			AttachStdin: false,
