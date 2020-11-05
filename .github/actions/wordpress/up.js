@@ -1,9 +1,11 @@
+// @ts-check
+
 const { EOL } = require( 'os' );
 
 const core = require( '@actions/core' );
 const Docker = require( 'dockerode' );
 
-function followProgress( stream ) {
+function followProgress( docker, stream ) {
 	return new Promise( ( resolve, reject ) => {
 		docker.modem.followProgress( stream, ( error, output ) => {
 			if ( error ) {
