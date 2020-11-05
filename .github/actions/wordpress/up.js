@@ -1,3 +1,5 @@
+const { EOL } = require( 'os' );
+
 const core = require( '@actions/core' );
 const Docker = require( 'dockerode' );
 
@@ -23,15 +25,16 @@ async function run() {
 		docker.modem.followProgress( stream, resolve, ( { id, status, progressDetail } ) => {
 			const { current, total } = progressDetail || {};
 			const progress = total ? ` - ${ Math.ceil( ( current || 0 ) * 100 / total ) }%` : '';
-			console.log( `Pulling wpsnapshots image: [${ id }] ${ status }${ progress }` );
+			console.log( `[${ id }] ${ status }${ progress }` );
 		} );
 	} );
 	core.endGroup();
 
-	core.startGroup( 'Creating WordPress container' );
+	core.startGroup( 'Creating WordPress container...' );
 	const container = await docker.createContainer( {
 		Image,
 		name: 'wordpress',
+		AttachStdin: false,
 		AttachStdout: true,
 		AttachStderr: true,
 		HostConfig: {
@@ -43,15 +46,41 @@ async function run() {
 	} );
 	core.endGroup();
 
-	core.startGroup( 'Starting WordPress container' );
+	core.startGroup( 'Starting WordPress container...' );
 	await container.start();
 	core.endGroup();
 
 	core.saveState( 'container_id', container.id );
 	core.setOutput( 'id', container.id );
 
-	// const dump = core.getInput( 'dump' );
-	// const wpCli = core.getInput( 'wp-cli' );
+	const dump = core.getInput( 'dump' );
+	if ( dump ) {
+		core.startGroup( 'Importing database dump...' );
+		await container.exec( {
+			Cmd: [ 'wp', 'db', 'import', dump ],
+			AttachStdin: false,
+			AttachStderr: true,
+			AttachStdout: true,
+			User: '33:33',
+		} );
+		core.endGroup();
+	}
+
+	const wpCli = core.getInput( 'wp-cli' );
+	if ( wpCli ) {
+		const commands = wpCli.split( EOL );
+		for ( const command of commands ) {
+			core.startGroup( command );
+			await container.exec( {
+				Cmd: command.split( ' ' ),
+				AttachStdin: false,
+				AttachStderr: true,
+				AttachStdout: true,
+				User: '33:33',
+			} );
+			core.endGroup();
+		}
+	}
 }
 
 run().catch( ( e ) => {
