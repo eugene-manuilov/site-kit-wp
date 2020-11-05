@@ -3,11 +3,29 @@ const { EOL } = require( 'os' );
 const core = require( '@actions/core' );
 const Docker = require( 'dockerode' );
 
+function followProgress( stream ) {
+	return new Promise( ( resolve, reject ) => {
+		docker.modem.followProgress( stream, ( error, output ) => {
+			if ( error ) {
+				reject( error );
+			} else {
+				if ( Array.isArray( output ) && output.length ) {
+					output.forEach( console.log );
+				}
+
+				resolve();
+			}
+		} );
+	} );
+}
+
 async function run() {
 	const docker = new Docker();
 	const Image = core.getInput( 'image', { required: true } );
 
-	let authconfig = undefined;
+	let stream;
+	let authconfig;
+
 	const username = core.getInput( 'username' );
 	const password = core.getInput( 'password' );
 	const serveraddress = core.getInput( 'registry' );
@@ -20,14 +38,8 @@ async function run() {
 	}
 
 	core.startGroup( 'Pulling WordPress image' );
-	const stream = await docker.pull( Image, { authconfig } );
-	await new Promise( ( resolve ) => {
-		docker.modem.followProgress( stream, resolve, ( { id, status, progressDetail } ) => {
-			const { current, total } = progressDetail || {};
-			const progress = total ? ` - ${ Math.ceil( ( current || 0 ) * 100 / total ) }%` : '';
-			console.log( `[${ id }] ${ status }${ progress }` );
-		} );
-	} );
+	stream = await docker.pull( Image, { authconfig } );
+	await followProgress( stream );
 	core.endGroup();
 
 	core.startGroup( 'Creating WordPress container' );
@@ -45,7 +57,8 @@ async function run() {
 		},
 	} );
 
-	await container.start();
+	stream = await container.start();
+	await followProgress( stream );
 	core.endGroup();
 
 	core.saveState( 'container_id', container.id );
@@ -54,13 +67,14 @@ async function run() {
 	const dump = core.getInput( 'dump' );
 	if ( dump ) {
 		core.startGroup( 'Importing database dump' );
-		await container.exec( {
+		stream = await container.exec( {
 			Cmd: [ 'wp', 'db', 'import', dump ],
 			AttachStdin: false,
 			AttachStderr: true,
 			AttachStdout: true,
 			User: '33:33',
 		} );
+		await followProgress( stream );
 		core.endGroup();
 	}
 
@@ -69,13 +83,14 @@ async function run() {
 		const commands = wpCli.split( EOL );
 		for ( const command of commands ) {
 			core.startGroup( command );
-			await container.exec( {
+			stream = await container.exec( {
 				Cmd: command.split( ' ' ),
 				AttachStdin: false,
 				AttachStderr: true,
 				AttachStdout: true,
 				User: '33:33',
 			} );
+			await followProgress( stream );
 			core.endGroup();
 		}
 	}
