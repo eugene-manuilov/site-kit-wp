@@ -41,7 +41,7 @@ async function run() {
 
 	core.startGroup( 'Pulling WordPress image' );
 	stream = await docker.pull( Image, { authconfig } );
-	await followProgress( stream );
+	await followProgress( docker, stream );
 	core.endGroup();
 
 	core.startGroup( 'Creating WordPress container' );
@@ -60,7 +60,7 @@ async function run() {
 	} );
 
 	stream = await container.start();
-	await followProgress( stream );
+	await followProgress( docker, stream );
 	core.endGroup();
 
 	core.saveState( 'container_id', container.id );
@@ -76,7 +76,7 @@ async function run() {
 			AttachStdout: true,
 			User: '33:33',
 		} );
-		await followProgress( stream );
+		await followProgress( docker, stream );
 		core.endGroup();
 	}
 
@@ -92,7 +92,7 @@ async function run() {
 				AttachStdout: true,
 				User: '33:33',
 			} );
-			await followProgress( stream );
+			await followProgress( docker, stream );
 			core.endGroup();
 		}
 	}
