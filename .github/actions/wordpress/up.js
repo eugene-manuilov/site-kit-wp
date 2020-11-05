@@ -18,7 +18,14 @@ async function run() {
 	}
 
 	core.startGroup( 'Pulling WordPress image' );
-	await docker.pull( Image, { authconfig } );
+	const stream = await docker.pull( Image, { authconfig } );
+	await new Promise( ( resolve ) => {
+		docker.modem.followProgress( stream, resolve, ( { id, status, progressDetail } ) => {
+			const { current, total } = progressDetail || {};
+			const progress = total ? ` - ${ Math.ceil( ( current || 0 ) * 100 / total ) }%` : '';
+			console.log( `Pulling wpsnapshots image: [${ id }] ${ status }${ progress }` );
+		} );
+	} );
 	core.endGroup();
 
 	core.startGroup( 'Creating WordPress container' );
