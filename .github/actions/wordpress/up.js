@@ -16,10 +16,16 @@ async function run() {
 		};
 	}
 
+	core.startGroup( 'Pulling WordPress image' );
+	await docker.createImage( {
+		authconfig,
+		fromImage: core.getInput( 'image', { required: true } ),
+	} );
+	core.endGroup();
+
 	core.startGroup( 'Creating WordPress container' );
 	const container = await docker.createContainer( {
 		name: 'wordpress',
-		authconfig,
 		AttachStdout: true,
 		AttachStderr: true,
 		Image: core.getInput( 'image', { required: true } ),
