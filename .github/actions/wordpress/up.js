@@ -6,9 +6,23 @@ const { resolve } = require( 'path' );
 const core = require( '@actions/core' );
 const Docker = require( 'dockerode' );
 
-function followPullProgress( { modem }, stream ) {
-	return new Promise( ( resolve ) => {
-		modem.followProgress( stream, resolve, ( event ) => {
+async function pull( docker, image ) {
+	const args = {};
+
+	const username = core.getInput( 'username' );
+	const password = core.getInput( 'password' );
+	const serveraddress = core.getInput( 'registry' );
+	if ( username && password && serveraddress ) {
+		args.authconfig = {
+			username,
+			password,
+			serveraddress,
+		};
+	}
+
+	const stream = await docker.pull( image, args );
+	await  new Promise( ( resolve ) => {
+		docker.modem.followProgress( stream, resolve, ( event ) => {
 			const { id, status, progress } = event;
 			if ( id ) {
 				if ( progress ) {
@@ -23,50 +37,9 @@ function followPullProgress( { modem }, stream ) {
 	} );
 }
 
-async function exec( container, Cmd ) {
-	const execArgs = {
-		Cmd,
-		AttachStdin: false,
-		AttachStderr: true,
-		AttachStdout: true,
-		User: '33:33',
-	};
-
-	const exec = await container.exec( execArgs );
-	const stream = await exec.start( {} );
-
-	await new Promise( ( resolve ) => {
-		container.modem.demuxStream( stream, process.stdout, process.stderr );
-		stream.on( 'end', resolve );
-	} );
-}
-
-async function run() {
-	const docker = new Docker();
-	const Image = core.getInput( 'image', { required: true } );
-
-	let stream;
-	let authconfig;
-
-	const username = core.getInput( 'username' );
-	const password = core.getInput( 'password' );
-	const serveraddress = core.getInput( 'registry' );
-	if ( username && password && serveraddress ) {
-		authconfig = {
-			username,
-			password,
-			serveraddress,
-		};
-	}
-
-	core.startGroup( 'Pulling WordPress image' );
-	stream = await docker.pull( Image, { authconfig } );
-	await followPullProgress( docker, stream );
-	core.endGroup();
-
-	core.startGroup( 'Creating WordPress container' );
+async function start( docker, image ) {
 	const container = await docker.createContainer( {
-		Image,
+		Image: image,
 		AttachStdin: false,
 		AttachStdout: true,
 		AttachStderr: true,
@@ -87,6 +60,38 @@ async function run() {
 
 	await container.start();
 	core.info( `Container ${ container.id } has been started.` );
+
+	return container;
+}
+
+async function exec( container, command ) {
+	const execArgs = {
+		Cmd: command,
+		AttachStdin: false,
+		AttachStderr: true,
+		AttachStdout: true,
+		User: '33:33',
+	};
+
+	const exec = await container.exec( execArgs );
+	const stream = await exec.start( {} );
+
+	await new Promise( ( resolve ) => {
+		container.modem.demuxStream( stream, process.stdout, process.stderr );
+		stream.on( 'end', resolve );
+	} );
+}
+
+async function run() {
+	const docker = new Docker();
+	const image = core.getInput( 'image', { required: true } );
+
+	core.startGroup( 'Pulling WordPress image' );
+	await pull( docker, image );
+	core.endGroup();
+
+	core.startGroup( 'Creating WordPress container' );
+	const container = await start( docker, image );
 	core.endGroup();
 
 	core.saveState( 'container_id', container.id );
@@ -101,13 +106,16 @@ async function run() {
 
 	const wpCli = core.getInput( 'wp-cli' );
 	if ( wpCli ) {
-		const commands = wpCli.trim().split( EOL ).map( ( command ) => command.trim() );
+		const commands = wpCli
+			.trim()
+			.split( EOL )
+			.map( ( command ) => command.trim() )
+			.filter( ( command ) => command.length > 0 );
+
 		for ( const command of commands ) {
-			if ( command.length > 0 ) {
-				core.startGroup( command );
-				await exec( container, command.split( ' ' ) );
-				core.endGroup();
-			}
+			core.startGroup( command );
+			await exec( container, command.split( ' ' ) );
+			core.endGroup();
 		}
 	}
 }
