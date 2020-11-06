@@ -56,10 +56,8 @@ jobs:
         ports:
           - 3306
         env:
-          MYSQL_RANDOM_ROOT_PASSWORD: "1"
+          MYSQL_ROOT_PASSWORD: example
           MYSQL_DATABASE: wordpress_test
-          MYSQL_USER: wordpress
-          MYSQL_PASSWORD: password
         options: >-
           --health-cmd="mysqladmin ping"
           --health-interval=10s
@@ -76,10 +74,16 @@ jobs:
       #     --mount type=bind,source=/home/runner/work/site-kit-wp/site-kit-wp,target=/var/www/html/wp-content/plugins/google-site-kit,readonly
     steps:
       - uses: actions/checkout@v2
-      # - name: Get Info
-      #   id: info
-      #   run: |
-      #     echo "::set-output name=composerCacheFilesDir::$(composer config cache-files-dir)"
+      - name: Get Composer Cache Directory
+        id: composer-cache
+        run: echo "::set-output name=composerCacheFilesDir::$(composer config cache-files-dir)"
+      - name: Load Composer Cache
+        uses: actions/cache@v2
+        with:
+          path: ${{ steps.composer-cache.outputs.composerCacheFilesDir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+      - name: Composer Install
+        run: composer install --no-dev --no-interaction --no-progress
       - name: Load NPM Cache
         uses: actions/cache@v2
         with:
@@ -105,20 +109,6 @@ jobs:
             wp plugin install gutenberg --version="4.9.0" --activate
             wp plugin install amp --version="2.0.0"
             wp plugin update amp --minor
-      # - name: Load Composer Cache
-      #   uses: actions/cache@v2
-      #   with:
-      #     path: ${{ steps.info.outputs.composerCacheFilesDir }}
-      #     key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-      # - name: Composer Install
-      #   run: composer install --no-dev --no-interaction --no-progress
-      # - name: Configure WordPress
-      #   run: |
-      #     docker exec --user 33:33 ${{ job.services.wordpress.id }} wp db import wp-content/plugins/google-site-kit/bin/local-env/dump.sql
-      #     docker exec --user 33:33 ${{ job.services.wordpress.id }} wp core update-db
-      #     docker exec --user 33:33 ${{ job.services.wordpress.id }} wp plugin install gutenberg --version="4.9.0" --activate
-      #     docker exec --user 33:33 ${{ job.services.wordpress.id }} wp plugin install amp --version="2.0.0"
-      #     docker exec --user 33:33 ${{ job.services.wordpress.id }} wp plugin update amp --minor
       # - name: Install NPM Dependencies
       #   run: npm ci
       # - name: Build Assets
