@@ -1,23 +1,43 @@
 // @ts-check
 
 const { EOL } = require( 'os' );
+const { resolve } = require( 'path' );
 
 const core = require( '@actions/core' );
 const Docker = require( 'dockerode' );
 
-function followProgress( docker, stream ) {
-	return new Promise( ( resolve, reject ) => {
-		docker.modem.followProgress( stream, ( error, output ) => {
-			if ( error ) {
-				reject( error );
-			} else {
-				if ( Array.isArray( output ) && output.length ) {
-					output.forEach( console.log );
+function followPullProgress( { modem }, stream ) {
+	return new Promise( ( resolve ) => {
+		modem.followProgress( stream, resolve, ( event ) => {
+			const { id, status, progress } = event;
+			if ( id ) {
+				if ( progress ) {
+					core.info( `[${ id }] ${ status }: ${ progress }` );
+				} else {
+					core.info( `[${ id }] ${ status }` );
 				}
-
-				resolve();
+			} else {
+				core.info( status );
 			}
 		} );
+	} );
+}
+
+async function exec( container, Cmd ) {
+	const execArgs = {
+		Cmd,
+		AttachStdin: false,
+		AttachStderr: true,
+		AttachStdout: true,
+		User: '33:33',
+	};
+
+	const exec = await container.exec( execArgs );
+	const stream = await exec.start( {} );
+
+	await new Promise( ( resolve ) => {
+		container.modem.demuxStream( stream, process.stdout, process.stderr );
+		stream.on( 'end', resolve );
 	} );
 }
 
@@ -41,26 +61,32 @@ async function run() {
 
 	core.startGroup( 'Pulling WordPress image' );
 	stream = await docker.pull( Image, { authconfig } );
-	await followProgress( docker, stream );
+	await followPullProgress( docker, stream );
 	core.endGroup();
 
 	core.startGroup( 'Creating WordPress container' );
 	const container = await docker.createContainer( {
 		Image,
-		name: 'wordpress',
 		AttachStdin: false,
 		AttachStdout: true,
 		AttachStderr: true,
 		HostConfig: {
 			NetworkMode: core.getInput( 'network', { required: true } ),
 			PortBindings: {
-				'9002/tcp': [ { HostPort: '80' } ],
+				'80/tcp': [
+					{
+						HostPort: '9002',
+					},
+				],
 			},
+			Binds: [
+				`${ resolve( __dirname, '../../..' ) }:/var/www/html/wp-content/plugins/google-site-kit:ro`,
+			],
 		},
 	} );
 
-	stream = await container.start();
-	await followProgress( docker, stream );
+	await container.start();
+	core.info( `Container ${ container.id } has been started.` );
 	core.endGroup();
 
 	core.saveState( 'container_id', container.id );
@@ -69,31 +95,19 @@ async function run() {
 	const dump = core.getInput( 'dump' );
 	if ( dump ) {
 		core.startGroup( 'Importing database dump' );
-		stream = await container.exec( {
-			Cmd: [ 'wp', 'db', 'import', dump ],
-			AttachStdin: false,
-			AttachStderr: true,
-			AttachStdout: true,
-			User: '33:33',
-		} );
-		await followProgress( docker, stream );
+		await exec( container, [ 'wp', 'db', 'import', dump ] );
 		core.endGroup();
 	}
 
 	const wpCli = core.getInput( 'wp-cli' );
 	if ( wpCli ) {
-		const commands = wpCli.split( EOL );
+		const commands = wpCli.trim().split( EOL ).map( ( command ) => command.trim() );
 		for ( const command of commands ) {
-			core.startGroup( command );
-			stream = await container.exec( {
-				Cmd: command.split( ' ' ),
-				AttachStdin: false,
-				AttachStderr: true,
-				AttachStdout: true,
-				User: '33:33',
-			} );
-			await followProgress( docker, stream );
-			core.endGroup();
+			if ( command.length > 0 ) {
+				core.startGroup( command );
+				await exec( container, command.split( ' ' ) );
+				core.endGroup();
+			}
 		}
 	}
 }
