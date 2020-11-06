@@ -56,8 +56,9 @@ jobs:
         ports:
           - 3306
         env:
-          MYSQL_ROOT_PASSWORD: example
           MYSQL_DATABASE: wordpress_test
+          MYSQL_USER: wordpress
+          MYSQL_PASSWORD: example
         options: >-
           --health-cmd="mysqladmin ping"
           --health-interval=10s
