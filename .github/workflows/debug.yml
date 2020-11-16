@@ -19,6 +19,6 @@ jobs:
         run: echo "$GITHUB_CONTEXT"
       - name: Update PR
         run: |
-          echo '{"body":"https://google.github.io/site-kit-wp/storybook/${TARGET_DIR}/?path=*"}' | curl -vvv -H "Authorization: ${{ secrets.GITHUB_TOKEN }} OAUTH-TOKEN" -X PATCH --data-binary @- ${{ github.event.pull_request._links.issue.href }}
+          echo '{"body":"https://google.github.io/site-kit-wp/storybook/${TARGET_DIR}/?path=*"}' | curl -vvv -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -XPATCH --data-binary @- ${{ github.event.pull_request._links.issue.href }}
         env:
           TARGET_DIR: pull/2373
