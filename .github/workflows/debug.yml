@@ -1,0 +1,26 @@
+name: Debug
+on:
+  pull_request:
+    branches:
+      - master
+      - develop
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+jobs:
+  github:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+      - name: Update PR
+        run: |
+          echo '{"body":"${{ github.event.pull_request.body }}"}' | \
+          sed -e 's/storybook.*\/storybook/storybook -->- [Storybook](https:\/\/google.github.io\/site-kit-wp\/storybook\/${TARGET_DIR}\/?path=*)<!-- \/storybook/g' | \
+          curl -vvv -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -XPATCH --data-binary @- ${{ github.event.pull_request._links.issue.href }}
+        env:
+          TARGET_DIR: pull/2373
