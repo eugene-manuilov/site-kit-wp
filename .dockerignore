@@ -1,0 +1,3 @@
+# Only e2e tests folder is needed, everything else can be ignored
+*
+!tests/e2e
